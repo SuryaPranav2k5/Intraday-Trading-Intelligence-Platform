@@ -1,0 +1,10 @@
+{
+  "lgb_long": 0.57,
+  "lgb_short": 0.51,
+  "xgb_long": 0.57,
+  "xgb_short": 0.51,
+  "ensemble_long_weight_lgb": 0.7000000000000001,
+  "ensemble_long_thresh": 0.57,
+  "ensemble_short_weight_lgb": 0.7000000000000001,
+  "ensemble_short_thresh": 0.51
+}

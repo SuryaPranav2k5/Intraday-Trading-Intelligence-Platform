@@ -1,0 +1,165 @@
+PS D:\Model\Human_ML> python exit_data_cleaning.py
+============================================================
+EXIT DATA CLEANING PIPELINE
+============================================================
+
+📁 Loading raw data...
+
+📊 Initial Statistics:
+   Rows: 919,906
+   Columns: 24
+
+   Column names: ['step', 'timestamp', 'open', 'high', 'low', 'close', 'volume', 'price_from_entry_atr', 'vwap_from_entry_atr', 'mfe_atr', 'mae_atr', 'bars_since_entry', 'pullback_depth', 'volatility_expansion_ratio', 'momentum_decay', 'unrealized_pnl_atr', 'current_atr', 'current_vwap', 'bars_to_exit', 'final_pnl_atr', 'exit_reason', 'trade_id', 'symbol', 'direction']
+
+✅ All required columns present
+
+============================================================
+STEP 2: REMOVING INVALID ROWS
+============================================================
+
+2.1 Removing NaN/Inf values...
+   Removed 0 rows with NaN/Inf
+   Remaining: 919,906 rows
+
+2.2 Removing trades with < 2 states...
+   Removed 82,805 short trades (82,805 rows)
+   Remaining: 837,101 rows
+
+2.3 Checking ATR sanity...
+   Removed 0 rows with current_atr <= 0
+   Remaining: 837,101 rows
+
+============================================================
+STEP 3: CLIPPING EXTREME VALUES
+============================================================
+   price_from_entry_atr           [-30.96, +30.34] → [-8.00, +8.00] ✅ CLIPPED
+   vwap_from_entry_atr            [-17.63, +11.00] → [-8.00, +8.00] ✅ CLIPPED
+   mfe_atr                        [+0.00, +30.34] → [+0.00, +8.00] ✅ CLIPPED
+   mae_atr                        [-30.96, +0.00] → [-8.00, +0.00] ✅ CLIPPED
+   unrealized_pnl_atr             [-30.96, +30.34] → [-8.00, +8.00] ✅ CLIPPED
+   pullback_depth                 [+0.00, +31.95] → [+0.00, +8.00] ✅ CLIPPED
+   momentum_decay                 Clipped to [-3, 3]
+
+============================================================
+STEP 4: NORMALIZING LIFECYCLE FEATURES
+============================================================
+   Removed 0 rows with negative step
+   Removed 0 rows with step > 120 (extreme duration)
+   Added 'step_log' feature: log1p(step)
+   Clipped 'volatility_expansion_ratio' to [0.1, 5.0]
+
+   Final rows: 837,101
+
+============================================================
+STEP 5: DISTRIBUTION VERIFICATION
+============================================================
+
+📊 Step distribution:
+count    837101.000000
+mean          4.262814
+std           5.592545
+min           0.000000
+25%           1.000000
+50%           2.000000
+75%           6.000000
+max          60.000000
+
+📊 Unrealized P&L (ATR) distribution:
+count    837101.000000
+mean          0.167719
+std           0.702481
+min          -8.000000
+25%          -0.229448
+50%           0.153784
+75%           0.566441
+max           8.000000
+
+📊 MFE (ATR) distribution:
+count    837101.000000
+mean          0.533443
+std           0.458663
+min           0.000000
+25%           0.157262
+50%           0.508867
+75%           0.811596
+max           8.000000
+
+📊 MAE (ATR) distribution:
+count    837101.000000
+mean         -0.279478
+std           0.371681
+min          -8.000000
+25%          -0.448545
+50%          -0.186697
+75%           0.000000
+max           0.000000
+
+📊 States per symbol:
+   LT          :    134,749 ( 16.1%)
+   RELIANCE    :    121,845 ( 14.6%)
+   SIEMENS     :    146,029 ( 17.4%)
+   TATAELXSI   :    140,944 ( 16.8%)
+   TITAN       :    150,301 ( 18.0%)
+   TVSMOTOR    :    143,233 ( 17.1%)
+
+📊 Exit reasons distribution:
+   end_of_data    :         42 (  0.0%)
+   end_of_day     :     10,460 (  1.2%)
+   stop_loss      :    417,219 ( 49.8%)
+   take_profit    :    406,879 ( 48.6%)
+   time_exit      :      2,501 (  0.3%)
+
+📊 Direction distribution:
+   LONG :    379,081 ( 45.3%)
+   SHORT:    458,020 ( 54.7%)
+
+============================================================
+VALIDATION CHECKS
+============================================================
+✅ Step mean: 4.26 (expected 2-15)
+✅ Symbol balance: ratio 1.23 (good)
+✅ No NaN values remaining
+✅ PnL range: [-8.00, 8.00] (within bounds)
+
+============================================================
+STEP 6: SAVING CLEAN DATASET
+============================================================
+
+✅ CLEAN EXIT DATASET SAVED
+   File: simulation_results/trade_states_clean.parquet
+   Rows: 837,101
+   Columns: 25
+   Size: 65.7 MB
+
+📁 Cleaning trades summary...
+   Trades: 237,452 → 154,646
+   File: simulation_results/trades_clean.csv
+
+============================================================
+FINAL SUMMARY
+============================================================
+
+📊 Dataset Statistics:
+   - Original rows:     919,906
+   - Clean rows:        837,101
+   - Rows removed:      82,805 (9.0%)
+
+   - Unique trades:     154,646
+   - Unique symbols:    6
+   - Columns:           25
+
+📁 Output Files:
+   - simulation_results/trade_states_clean.parquet
+   - simulation_results/trades_clean.csv
+
+🔒 FROM THIS POINT:
+   ❌ Do NOT regenerate
+   ❌ Do NOT re-clean
+   ❌ Do NOT mix raw + clean
+
+   This file is now GROUND TRUTH for exit model training.
+
+============================================================
+🎯 READY FOR EXIT MODEL TRAINING
+============================================================
+PS D:\Model\Human_ML> 

@@ -1,0 +1,328 @@
+{
+  "train": [
+    {
+      "future_max_mfe_atr": 0.4881925983068227,
+      "future_max_mae_atr": 0.4898939997169143,
+      "future_return_atr": 0.4996060509912793,
+      "continuation_score": 0.12431441936157556,
+      "total": 1.41436125609328
+    },
+    {
+      "future_max_mfe_atr": 0.4234475415226416,
+      "future_max_mae_atr": 0.4201292197614133,
+      "future_return_atr": 0.42224348662311023,
+      "continuation_score": 0.07540708928243488,
+      "total": 1.1678091386249443
+    },
+    {
+      "future_max_mfe_atr": 0.41500749120193736,
+      "future_max_mae_atr": 0.41322346584734904,
+      "future_return_atr": 0.4115910651272352,
+      "continuation_score": 0.0698583420832811,
+      "total": 1.1388140002322817
+    },
+    {
+      "future_max_mfe_atr": 0.4111540363330931,
+      "future_max_mae_atr": 0.4098226826805313,
+      "future_return_atr": 0.4064157755944182,
+      "continuation_score": 0.06765755841918025,
+      "total": 1.125670942854374
+    },
+    {
+      "future_max_mfe_atr": 0.40938669337448497,
+      "future_max_mae_atr": 0.4085001783449881,
+      "future_return_atr": 0.4037595356750714,
+      "continuation_score": 0.06671331215200695,
+      "total": 1.1198366089915552
+    },
+    {
+      "future_max_mfe_atr": 0.4080218045001334,
+      "future_max_mae_atr": 0.40755016950287154,
+      "future_return_atr": 0.40195712010347534,
+      "continuation_score": 0.0658917210679105,
+      "total": 1.1153881183470957
+    },
+    {
+      "future_max_mfe_atr": 0.4071054715073137,
+      "future_max_mae_atr": 0.4061262785120213,
+      "future_return_atr": 0.40067633739881764,
+      "continuation_score": 0.06526301599528209,
+      "total": 1.111464446740793
+    },
+    {
+      "future_max_mfe_atr": 0.4066351244212888,
+      "future_max_mae_atr": 0.4059629262761867,
+      "future_return_atr": 0.40024725976565206,
+      "continuation_score": 0.06487972442562698,
+      "total": 1.1100412703011335
+    },
+    {
+      "future_max_mfe_atr": 0.4061982605615124,
+      "future_max_mae_atr": 0.4056733537368459,
+      "future_return_atr": 0.3994713284022419,
+      "continuation_score": 0.06479030991100813,
+      "total": 1.1087927449115906
+    },
+    {
+      "future_max_mfe_atr": 0.40566751128392864,
+      "future_max_mae_atr": 0.4051544085743861,
+      "future_return_atr": 0.3992171753946489,
+      "continuation_score": 0.0645362007702496,
+      "total": 1.1072348095564695
+    },
+    {
+      "future_max_mfe_atr": 0.4050990187389067,
+      "future_max_mae_atr": 0.40494209626605887,
+      "future_return_atr": 0.39860520591127113,
+      "continuation_score": 0.06431384387274161,
+      "total": 1.105814483712469
+    },
+    {
+      "future_max_mfe_atr": 0.4048488590311497,
+      "future_max_mae_atr": 0.40431042829303876,
+      "future_return_atr": 0.3981696522968599,
+      "continuation_score": 0.06416133963822192,
+      "total": 1.1044861198035256
+    },
+    {
+      "future_max_mfe_atr": 0.4048859584838786,
+      "future_max_mae_atr": 0.40448736594923845,
+      "future_return_atr": 0.39808665261764614,
+      "continuation_score": 0.06396395352010749,
+      "total": 1.1043625833294917
+    },
+    {
+      "future_max_mfe_atr": 0.4042779048706623,
+      "future_max_mae_atr": 0.40419529797619397,
+      "future_return_atr": 0.39754614156470514,
+      "continuation_score": 0.06387320359900206,
+      "total": 1.103056080234248
+    },
+    {
+      "future_max_mfe_atr": 0.4044595936370516,
+      "future_max_mae_atr": 0.4042079447290858,
+      "future_return_atr": 0.3975667577967858,
+      "continuation_score": 0.06377246817375751,
+      "total": 1.1031096208461915
+    },
+    {
+      "future_max_mfe_atr": 0.4039932263235674,
+      "future_max_mae_atr": 0.40384655782235146,
+      "future_return_atr": 0.3972296206100049,
+      "continuation_score": 0.06360180305215765,
+      "total": 1.1018572931594037
+    },
+    {
+      "future_max_mfe_atr": 0.40407395838422977,
+      "future_max_mae_atr": 0.4039145543924742,
+      "future_return_atr": 0.39752138760072964,
+      "continuation_score": 0.06374086702053147,
+      "total": 1.1023605041751907
+    },
+    {
+      "future_max_mfe_atr": 0.4036000619684269,
+      "future_max_mae_atr": 0.4033192912596619,
+      "future_return_atr": 0.39689413438733867,
+      "continuation_score": 0.06360985676870279,
+      "total": 1.1007812076708385
+    },
+    {
+      "future_max_mfe_atr": 0.40379045061749486,
+      "future_max_mae_atr": 0.403595427319795,
+      "future_return_atr": 0.3971010321843709,
+      "continuation_score": 0.06349158732674083,
+      "total": 1.1011737725977075
+    },
+    {
+      "future_max_mfe_atr": 0.40354644505408355,
+      "future_max_mae_atr": 0.403447015981584,
+      "future_return_atr": 0.396773765484492,
+      "continuation_score": 0.06344585957327069,
+      "total": 1.1005491314204872
+    },
+    {
+      "future_max_mfe_atr": 0.4031008493252116,
+      "future_max_mae_atr": 0.4029447672355823,
+      "future_return_atr": 0.39640400137743487,
+      "continuation_score": 0.06340016638661952,
+      "total": 1.0993478657506037
+    },
+    {
+      "future_max_mfe_atr": 0.40330432450517695,
+      "future_max_mae_atr": 0.40300232425649113,
+      "future_return_atr": 0.3963793695818448,
+      "continuation_score": 0.06335685970195641,
+      "total": 1.099531618979524
+    },
+    {
+      "future_max_mfe_atr": 0.4031763267714363,
+      "future_max_mae_atr": 0.4029159144306859,
+      "future_return_atr": 0.396458318399763,
+      "continuation_score": 0.06324145698977136,
+      "total": 1.0991835878814085
+    }
+  ],
+  "val": [
+    {
+      "future_max_mfe_atr": 0.3980047345816434,
+      "future_max_mae_atr": 0.39864893339492463,
+      "future_return_atr": 0.3922934148992811,
+      "continuation_score": 0.06265192564863425,
+      "total": 1.0867782673992954
+    },
+    {
+      "future_max_mfe_atr": 0.3962180657046182,
+      "future_max_mae_atr": 0.39598438962475285,
+      "future_return_atr": 0.3888110426756052,
+      "continuation_score": 0.06209649997098105,
+      "total": 1.0797527203193078
+    },
+    {
+      "future_max_mfe_atr": 0.3967966650213514,
+      "future_max_mae_atr": 0.3958766024846297,
+      "future_return_atr": 0.38801361866049716,
+      "continuation_score": 0.06171467278029893,
+      "total": 1.0792520832229446
+    },
+    {
+      "future_max_mfe_atr": 0.39545431438383166,
+      "future_max_mae_atr": 0.3947799651177375,
+      "future_return_atr": 0.3873245892943917,
+      "continuation_score": 0.06161007530741639,
+      "total": 1.0763116871917642
+    },
+    {
+      "future_max_mfe_atr": 0.3960478875663254,
+      "future_max_mae_atr": 0.3951427510806492,
+      "future_return_atr": 0.3872653733897995,
+      "continuation_score": 0.06158321973059203,
+      "total": 1.0771981556336958
+    },
+    {
+      "future_max_mfe_atr": 0.39634678684748137,
+      "future_max_mae_atr": 0.39788137785681,
+      "future_return_atr": 0.38997445918701507,
+      "continuation_score": 0.06254917956315555,
+      "total": 1.0830391645431519
+    },
+    {
+      "future_max_mfe_atr": 0.39501664173472056,
+      "future_max_mae_atr": 0.39552378818229006,
+      "future_return_atr": 0.388955471607355,
+      "continuation_score": 0.06213027566343873,
+      "total": 1.0782135869120504
+    },
+    {
+      "future_max_mfe_atr": 0.39594627638439556,
+      "future_max_mae_atr": 0.39597012249978036,
+      "future_return_atr": 0.38848843024327206,
+      "continuation_score": 0.06182198668574239,
+      "total": 1.0788935992743942
+    },
+    {
+      "future_max_mfe_atr": 0.3960883542076572,
+      "future_max_mae_atr": 0.3961050399057158,
+      "future_return_atr": 0.38842529975450957,
+      "continuation_score": 0.0621145741379523,
+      "total": 1.079577916271084
+    },
+    {
+      "future_max_mfe_atr": 0.39731716061686423,
+      "future_max_mae_atr": 0.39621940091416075,
+      "future_return_atr": 0.388222058068265,
+      "continuation_score": 0.061246396421076175,
+      "total": 1.0795171856880188
+    },
+    {
+      "future_max_mfe_atr": 0.39479237762126296,
+      "future_max_mae_atr": 0.3949118187794319,
+      "future_return_atr": 0.3874426778856215,
+      "continuation_score": 0.061705945121062984,
+      "total": 1.0759844590019394
+    },
+    {
+      "future_max_mfe_atr": 0.3960035986952729,
+      "future_max_mae_atr": 0.3956512022804428,
+      "future_return_atr": 0.3875830180042393,
+      "continuation_score": 0.06126838459909617,
+      "total": 1.0773488879203796
+    },
+    {
+      "future_max_mfe_atr": 0.3968837981695657,
+      "future_max_mae_atr": 0.39746198975122893,
+      "future_return_atr": 0.3900256959291605,
+      "continuation_score": 0.06172421222532189,
+      "total": 1.0819449470593379
+    },
+    {
+      "future_max_mfe_atr": 0.39527336909220767,
+      "future_max_mae_atr": 0.39555832481646275,
+      "future_return_atr": 0.3879200563980983,
+      "continuation_score": 0.06154738788257588,
+      "total": 1.0771127965424088
+    },
+    {
+      "future_max_mfe_atr": 0.3955618139806685,
+      "future_max_mae_atr": 0.3952890755711021,
+      "future_return_atr": 0.3875863954916105,
+      "continuation_score": 0.06125696052561749,
+      "total": 1.076529519898551
+    },
+    {
+      "future_max_mfe_atr": 0.3958923456433055,
+      "future_max_mae_atr": 0.3953916610597254,
+      "future_return_atr": 0.3876302772825891,
+      "continuation_score": 0.06117199782978047,
+      "total": 1.0768571417410295
+    },
+    {
+      "future_max_mfe_atr": 0.39617521520499344,
+      "future_max_mae_atr": 0.3966543271646395,
+      "future_return_atr": 0.3887902016823108,
+      "continuation_score": 0.06161265312642841,
+      "total": 1.0796436254794781
+    },
+    {
+      "future_max_mfe_atr": 0.39458765204136187,
+      "future_max_mae_atr": 0.39462067104957915,
+      "future_return_atr": 0.3870507694862701,
+      "continuation_score": 0.06155744829511905,
+      "total": 1.0750698853325058
+    },
+    {
+      "future_max_mfe_atr": 0.3950826060640943,
+      "future_max_mae_atr": 0.39523724769497964,
+      "future_return_atr": 0.387462175481922,
+      "continuation_score": 0.06130816374015022,
+      "total": 1.0760131910607056
+    },
+    {
+      "future_max_mfe_atr": 0.3956397614636264,
+      "future_max_mae_atr": 0.39518677173080025,
+      "future_return_atr": 0.3873676117304917,
+      "continuation_score": 0.061369811154001364,
+      "total": 1.076565058676751
+    },
+    {
+      "future_max_mfe_atr": 0.39497990562365604,
+      "future_max_mae_atr": 0.39485910534858704,
+      "future_return_atr": 0.3869999362217201,
+      "continuation_score": 0.0612279352742237,
+      "total": 1.0751808796610152
+    },
+    {
+      "future_max_mfe_atr": 0.3947571155789134,
+      "future_max_mae_atr": 0.3946975643163199,
+      "future_return_atr": 0.3871234711054917,
+      "continuation_score": 0.06130160849827986,
+      "total": 1.0749688200898222
+    },
+    {
+      "future_max_mfe_atr": 0.39448113985114047,
+      "future_max_mae_atr": 0.39444644863788897,
+      "future_return_atr": 0.38664959125466397,
+      "continuation_score": 0.061181028260961993,
+      "total": 1.0740239253410926
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+System Flow: From 1-Minute Data to Decision
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         1-MINUTE CANDLE ARRIVES                              │
+│                         (Every minute at :05 seconds)                        │
+└───────────────────────────────────┬──────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  app.py → inference_background_worker()                                      │
+│  ────────────────────────────────────                                        │
+│  1. Fetch latest 1-min candle from SmartAPI                                  │
+│  2. Append to candle_cache (300 candles rolling)                             │
+│  3. Get df_1m DataFrame                                                      │
+└───────────────────────────────────┬──────────────────────────────────────────┘
+                                    │
+                    ┌───────────────┴───────────────┐
+                    │                               │
+                    ▼                               ▼
+┌────────────────────────────────┐   ┌────────────────────────────────────────┐
+│         ENTRY PATH             │   │              EXIT PATH                  │
+│   (Always runs every minute)   │   │   (Only if trade is active)            │
+└────────────────────────────────┘   └────────────────────────────────────────┘
+                    │                               │
+                    ▼                               ▼
+┌────────────────────────────────┐   ┌────────────────────────────────────────┐
+│  engine.predict(symbol, df_1m) │   │  if symbol in active_supervised_trades │
+│  ─────────────────────────────│   │  ─────────────────────────────────────│
+│                                │   │  evaluate_supervised_trade()           │
+│  inference.py:                 │   │                                        │
+│  1. Compute 71 features        │   │  app.py:                               │
+│  2. LGB_long + LGB_short       │   │  1. Update trade metrics               │
+│  3. XGB_long + XGB_short       │   │  2. Update MFE/MAE                     │
+│  4. Ensemble (50/50 weights)   │   │  3. Increment step counter             │
+│  5. Compare to threshold       │   │  4. Compute momentum_decay             │
+└────────────────────────────────┘   └────────────────────────────────────────┘
+                    │                               │
+                    ▼                               ▼
+┌────────────────────────────────┐   ┌────────────────────────────────────────┐
+│         ENTRY OUTPUT           │   │  engine.get_exit_decision()            │
+│  ─────────────────────────────│   │  ─────────────────────────────────────│
+│  {                             │   │                                        │
+│    entry_prob: 0.72,           │   │  live_exit_engine.py:                  │
+│    threshold: 0.57,            │   │  1. Hard stop check (-1.2 ATR)         │
+│    signal: True,               │   │  2. Max bars check (120)               │
+│    directional_bias: +1,       │   │  3. Build state sequence               │
+│    vwap: 3245.50,              │   │  4. Transformer inference              │
+│    ema20: 3240.20,             │   │  5. Build 20-feature LGBM input        │
+│    atr: 28.5                   │   │  6. LGBM predict → exit_prob           │
+│  }                             │   │  7. if exit_prob >= 0.5 → EXIT         │
+└────────────────────────────────┘   └────────────────────────────────────────┘
+                    │                               │
+                    ▼                               ▼
+┌────────────────────────────────┐   ┌────────────────────────────────────────┐
+│      STORED IN CACHE           │   │           EXIT OUTPUT                   │
+│  ─────────────────────────────│   │  ─────────────────────────────────────│
+│  inference_results[symbol]     │   │  trade.trade_status = "EXIT_RECOMMENDED"│
+│                                │   │  trade.exit_reason = "Exit Engine"      │
+└────────────────────────────────┘   └────────────────────────────────────────┘
+                    │                               │
+                    └───────────────┬───────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        EMIT TO FRONTEND (WebSocket)                          │
+│  ────────────────────────────────────────────────                            │
+│                                                                              │
+│  handle_new_tick() / emit_supervision_state()                                │
+│                                                                              │
+│  {                                                                           │
+│    symbol: "TITAN",                                                          │
+│    setup_quality: 0.72,           ← Entry probability                        │
+│    signal: true,                  ← Entry signal                             │
+│    directional_bias: 1,           ← LONG                                     │
+│    trade_status: "EXIT_RECOMMENDED", ← if in trade                           │
+│    exit_reason: "Exit Engine"     ← if exiting                               │
+│  }                                                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            FRONTEND (React)                                  │
+│  ────────────────────────────────────────                                    │
+│                                                                              │
+│  Shows:                                                                      │
+│  • Setup Quality gauge (72%)                                                 │
+│  • SIGNAL ACTIVE if signal=true                                              │
+│  • Direction arrow (↑ LONG / ↓ SHORT)                                       │
+│  • EXIT RECOMMENDED if trade active and exiting                              │
+│                                                                              │
+│  User can:                                                                   │
+│  • Click "Register Entry" when signal appears                                │
+│  • Click "Close Trade" when EXIT recommended                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+File Responsibilities:
+File	Role
+app.py
+Orchestrates everything, WebSocket, background worker
+inference.py
+Entry models (LGB+XGB), Exit Engine wrapper
+live_exit_engine.py
+Transformer + LightGBM for exit decisions

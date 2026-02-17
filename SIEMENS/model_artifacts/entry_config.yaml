@@ -1,0 +1,15 @@
+market:
+  open: 09:15
+  close: '15:30'
+  tradable_start_offset_min: 60
+  tradable_end_offset_min: 15
+entry:
+  max_trades_per_symbol: 1
+  allow_long: true
+  allow_short: true
+ensemble:
+  lgb_weight: 0.5
+  xgb_weight: 0.5
+  conflict_policy: skip
+symbols:
+  SIEMENS: 1
