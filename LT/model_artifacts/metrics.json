@@ -1,10 +1,10 @@
 {
-  "lgb_long_auc": 0.6430574424713053,
-  "lgb_short_auc": 0.6315111521035968,
-  "xgb_long_auc": 0.6417245095133091,
-  "xgb_short_auc": 0.6322179632714939,
-  "ensemble_long_auc": 0.643145395621873,
-  "ensemble_short_auc": 0.6323930953757595,
+  "lgb_long_auc": 0.6332542895306283,
+  "lgb_short_auc": 0.625399759719725,
+  "xgb_long_auc": 0.6339567116369285,
+  "xgb_short_auc": 0.6246549372171863,
+  "ensemble_long_auc": 0.6340599433782448,
+  "ensemble_short_auc": 0.6254496714793392,
   "total_features": 63,
   "feature_names": [
     "log_return_1m",

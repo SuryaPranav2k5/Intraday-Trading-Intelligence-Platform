@@ -1314,7 +1314,7 @@ def get_cache_status():
 if __name__ == '__main__':
     print("Starting Trading Terminal...")
     print("Backend: http://localhost:5000")
-    print("Frontend: http://localhost:5173")
+    print("Frontend: http://localhost:3000")
     print("Real-time data will flow during market hours (9:15 AM - 3:30 PM IST)")
     print("=" * 60)
     socketio.run(app, host='0.0.0.0', port=5000, debug=False)

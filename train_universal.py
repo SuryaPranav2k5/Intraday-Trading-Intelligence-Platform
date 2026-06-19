@@ -1,6 +1,6 @@
 # ============================================================
 # Entry Model Training - LightGBM + XGBoost
-# Symbol: SIEMENS
+# Symbols: UNIVERSAL (All 6 Symbols Combined)
 # Author: Surya
 # Purpose: Pure Entry Signal Generation (NO EXIT LOGIC)
 # ============================================================
@@ -40,9 +40,9 @@ MARKET_OPEN = time(9, 15)
 MARKET_CLOSE = time(15, 30)
 RANDOM_SEED = 42
 
-# ATR-based labeling thresholds
-PROFIT_TARGET_ATR = 0.7  # If +0.7 ATR before -0.4 ATR → LONG
-STOP_LOSS_ATR = 0.4
+# ATR-based labeling thresholds (Symmetrical for robust risk/reward)
+PROFIT_TARGET_ATR = 1.5  # +1.5 ATR Target
+STOP_LOSS_ATR = 1.0      # -1.0 ATR Stop
 
 # ============================================================
 # 1. DATA LOADING & PREPARATION
@@ -283,6 +283,23 @@ def compute_volatility_features(df: pd.DataFrame) -> pd.DataFrame:
         include_lowest=True
     ).astype(float).fillna(1)
     
+    # --- ADX (Regime Filter) ---
+    # Explicit "Trending vs Mean Reverting" labels
+    up_move = high - high.shift(1)
+    down_move = low.shift(1) - low
+    
+    # Directional Movement
+    plus_dm = np.where((up_move > down_move) & (up_move > 0), up_move, 0)
+    minus_dm = np.where((down_move > up_move) & (down_move > 0), down_move, 0)
+    
+    # Smooth DM & TR (using a 14-period Wilder smoothing approximation via ewm)
+    plus_di = 100 * pd.Series(plus_dm, index=df.index).ewm(alpha=1/14, min_periods=14, adjust=False).mean() / (df['ATR_14'] + eps)
+    minus_di = 100 * pd.Series(minus_dm, index=df.index).ewm(alpha=1/14, min_periods=14, adjust=False).mean() / (df['ATR_14'] + eps)
+    
+    # Directional Index (DX) and ADX
+    dx = 100 * (abs(plus_di - minus_di) / (plus_di + minus_di + eps))
+    df['ADX_14'] = dx.ewm(alpha=1/14, min_periods=14, adjust=False).mean().values
+    
     return df
 
 
@@ -364,13 +381,8 @@ def compute_session_time_features(df: pd.DataFrame) -> pd.DataFrame:
     df['is_lunch_time'] = ((minutes_of_day >= 12 * 60) & (minutes_of_day <= 13 * 60 + 30)).astype(int)
     df['is_close_window'] = (minutes_of_day >= close_min - 30).astype(int)
     
-    # Minutes since open / to close
     df['minutes_since_open'] = minutes_of_day - open_min
     df['minutes_to_close'] = close_min - minutes_of_day
-    
-    # Symbol ID (for multi-symbol future compatibility)
-    # SIEMENS = 4
-    df['symbol_id'] = 4
     
     return df
 
@@ -398,7 +410,6 @@ def compute_htf_features(df: pd.DataFrame) -> pd.DataFrame:
     df['date'] = df.index.date
     
     # Compute prior-day stats SAFELY (no lookahead)
-    # Group by date, take agg, then shift to get PRIOR day values only
     daily_stats = df.groupby('date').agg(
         daily_high=('high', 'max'),
         daily_low=('low', 'min'),
@@ -481,13 +492,13 @@ def _label_loop(closes, highs, lows, atr, dates, lookahead, pt_mult, sl_mult):
     return labels_long, labels_short
 
 
-def generate_atr_labels(df: pd.DataFrame, lookahead: int = 45) -> pd.DataFrame:
+def generate_atr_labels(df: pd.DataFrame, lookahead: int = 15) -> pd.DataFrame:
     """
     ATR-based labeling for entries.
     
     Labels:
-        LONG = 1:  If +0.7 ATR reached before -0.4 ATR
-        SHORT = 1: If -0.7 ATR reached before +0.4 ATR
+        LONG = 1:  If +1.5 ATR reached before -1.0 ATR
+        SHORT = 1: If -1.5 ATR reached before +1.0 ATR
         NO_TRADE = 0: Otherwise
     
     Uses Numba @njit for 50-100x speedup over pure Python.
@@ -600,7 +611,7 @@ def train_lightgbm(X: pd.DataFrame, y: pd.Series, name: str):
     Uses Walk-Forward Validation (TimeSeriesSplit) to avoid overfitting.
     """
     # TimeSeriesSplit
-    n_splits = 5
+    n_splits = 3
     tscv = TimeSeriesSplit(n_splits=n_splits)
     
     print(f"\n{'='*60}")
@@ -658,7 +669,7 @@ def train_lightgbm(X: pd.DataFrame, y: pd.Series, name: str):
         return np.mean(fold_aucs)
 
     study = optuna.create_study(direction="maximize")
-    study.optimize(objective, n_trials=75, timeout=3600, show_progress_bar=True)
+    study.optimize(objective, n_trials=35, timeout=3600, show_progress_bar=True)
 
     print(f"\nBest params for {name}:")
     for key, value in study.best_params.items():
@@ -685,6 +696,7 @@ def train_lightgbm(X: pd.DataFrame, y: pd.Series, name: str):
         "verbosity": -1,
         "boosting_type": "gbdt",
         "seed": RANDOM_SEED,
+        "n_jobs": -1,
         "scale_pos_weight": dynamic_pos_weight,
     })
     
@@ -738,7 +750,7 @@ def train_xgboost(X: pd.DataFrame, y: pd.Series, name: str):
     Uses Walk-Forward Validation (TimeSeriesSplit).
     """
     # TimeSeriesSplit
-    n_splits = 5
+    n_splits = 3
     tscv = TimeSeriesSplit(n_splits=n_splits)
     
     print(f"\n{'='*60}")
@@ -754,6 +766,7 @@ def train_xgboost(X: pd.DataFrame, y: pd.Series, name: str):
             "tree_method": "hist",
             "seed": RANDOM_SEED,
             "verbosity": 0,
+            "n_jobs": -1,
             # "scale_pos_weight" removed to prevent macro leak, injected directly below.
             "lambda": trial.suggest_float("lambda", 1e-8, 1.0, log=True),
             "alpha": trial.suggest_float("alpha", 1e-8, 1.0, log=True),
@@ -795,7 +808,7 @@ def train_xgboost(X: pd.DataFrame, y: pd.Series, name: str):
         return np.mean(fold_aucs)
 
     study = optuna.create_study(direction="maximize")
-    study.optimize(objective, n_trials=75, timeout=3600, show_progress_bar=True)
+    study.optimize(objective, n_trials=35, timeout=3600, show_progress_bar=True)
     
     print(f"\nBest params for {name}:")
     for key, value in study.best_params.items():
@@ -826,6 +839,7 @@ def train_xgboost(X: pd.DataFrame, y: pd.Series, name: str):
         "eval_metric": "auc",
         "tree_method": "hist",
         "seed": RANDOM_SEED,
+        "n_jobs": -1,
         "scale_pos_weight": dynamic_pos_weight,
     })
     
@@ -867,7 +881,7 @@ def train_xgboost(X: pd.DataFrame, y: pd.Series, name: str):
 # 13. ENSEMBLE OPTIMIZATION
 # ============================================================
 
-def optimize_ensemble(y_val, preds_lgb, preds_xgb, name):
+def optimize_ensemble(y_val, preds_lgb, preds_xgb, name, sym_series_val):
     """
     Find optimal weights for LGB + XGB ensemble.
     Returns: best_weight_lgb, best_threshold, best_auc
@@ -908,23 +922,45 @@ def optimize_ensemble(y_val, preds_lgb, preds_xgb, name):
             
     print(f"  Best Weight (LGB): {best_w:.2f} (Weight Set AUC: {best_auc_w:.4f})")
     
-    # 2. Optimize Threshold for this Weight (on set T)
+    # 2. Optimize Threshold for this Weight PER SYMBOL (on set T)
     final_preds_t = best_w * preds_lgb_t + (1 - best_w) * preds_xgb_t
-    best_threshold = 0.5
-    best_score = 0
     
-    for threshold in np.linspace(0.3, 0.7, 41):
-        preds_binary = (final_preds_t >= threshold).astype(int)
-        if preds_binary.sum() < 5:  # lowered slightly for the 30% split size
+    symbol_thresholds = {}
+    
+    # We slice sym_series_val just like we slice y_val
+    sym_thresh = sym_series_val.iloc[split:]
+    unique_symbols = sym_thresh.unique()
+    
+    for sym in unique_symbols:
+        sym_mask = (sym_thresh == sym).values
+        if sum(sym_mask) < 50:  # If barely any trades in OOS
+            symbol_thresholds[sym] = 0.5
             continue
-        prec = precision_score(y_thresh, preds_binary, zero_division=0)
-        trade_frac = preds_binary.mean()
+            
+        y_sym = y_thresh.iloc[sym_mask]
+        preds_sym = final_preds_t[sym_mask]
         
-        if prec >= 0.55 and trade_frac >= 0.05:
-            score = prec * trade_frac
-            if score > best_score:
-                best_score = score
-                best_threshold = threshold
+        sym_best_thresh = 0.5
+        sym_best_score = 0
+        
+        for threshold in np.linspace(0.4, 0.7, 31):
+            preds_binary = (preds_sym >= threshold).astype(int)
+            if preds_binary.sum() < 3: 
+                continue
+            prec = precision_score(y_sym, preds_binary, zero_division=0)
+            trade_frac = preds_binary.mean()
+            
+            if prec >= 0.53 and trade_frac >= 0.02:
+                score = prec * trade_frac
+                if score > sym_best_score:
+                    sym_best_score = score
+                    sym_best_thresh = threshold
+                    
+        symbol_thresholds[sym] = sym_best_thresh
+        print(f"    -> {sym} best threshold: {sym_best_thresh:.3f}")
+        
+    best_threshold = symbol_thresholds  # Return the dict instead of scalar
+
                 
     # Evaluate final AUC on the entire sequence
     try:
@@ -932,7 +968,7 @@ def optimize_ensemble(y_val, preds_lgb, preds_xgb, name):
     except:
         final_auc = 0
         
-    print(f"  Best Threshold: {best_threshold:.3f} (Overall AUC: {final_auc:.4f})")
+    print(f"  Best Threshold: {best_threshold} (Overall AUC: {final_auc:.4f})")
     return best_w, best_threshold, final_auc
 
 
@@ -940,7 +976,9 @@ def optimize_ensemble(y_val, preds_lgb, preds_xgb, name):
 # 14. MAIN TRAINING PIPELINE
 # ============================================================
 
-def main():
+
+def process_symbol_data(df: pd.DataFrame):
+
     """
     Main training pipeline.
     1. Load data
@@ -949,53 +987,33 @@ def main():
     4. Train LightGBM + XGBoost for LONG and SHORT
     5. Save models and thresholds
     """
-    
-    data_path = Path("../Dataset/SIEMENS_2years_1min.parquet")
-    
-    print(f"\n{'='*60}")
-    print("ENTRY MODEL TRAINING - LightGBM + XGBoost")
-    print(f"{'='*60}")
-    print(f"Data source: {data_path}")
-    
     # ========== LOAD DATA ==========
-    print("\n[1/9] Loading data...")
-    df = load_raw_data(data_path)
     df = filter_market_hours(df)
-    print(f"  Loaded {len(df):,} bars")
     
     # ========== FEATURE ENGINEERING ==========
-    print("\n[2/9] Generating Feature Group 1 - Price & Return Structure...")
+    
     df = compute_price_return_features(df)
     
-    print("[3/9] Generating Feature Group 2 - Trend & Market Structure...")
     df = compute_trend_structure_features(df)
     
-    print("[4/9] Generating Feature Group 3 - Momentum Indicators...")
     df = compute_momentum_features(df)
     
-    print("[5/9] Generating Feature Group 4 - Volatility Context...")
     df = compute_volatility_features(df)
     
-    print("[6/9] Generating Feature Group 5 - Volume & Participation...")
     df = compute_volume_features(df)
     
-    print("[7/9] Generating Feature Group 6 - Session & Time Context...")
     df = compute_session_time_features(df)
     
-    print("[8/9] Generating Feature Group 7 - Higher-Timeframe Bias...")
     df = compute_htf_features(df)
     
     # ========== LABEL GENERATION ==========
-    print("\n[9/9] Generating ATR-based labels...")
     labels_df = generate_atr_labels(df)
     
     # ========== CLEANING ==========
-    print("\nCleaning and preparing training data...")
     X, labels_df = clean_training_data(df, labels_df)
     
     # ========== CORRELATION PRUNING (Fixed: Split-Aware) ==========
-    print("\nPruning highly correlated features based ONLY on First Fold Train Data (>0.95)...")
-    n_splits_sim = 5
+    n_splits_sim = 3
     split_idx_1st = int(len(X) / (n_splits_sim + 1))
     X_safe_train = X.iloc[:split_idx_1st]
     
@@ -1005,15 +1023,67 @@ def main():
     )
     to_drop = [col for col in upper_tri.columns if any(upper_tri[col] > 0.95)]
     if to_drop:
-        print(f"  Dropping {len(to_drop)} redundant features: {to_drop[:10]}{'...' if len(to_drop) > 10 else ''}")
         X = X.drop(columns=to_drop)
+
+    return X, labels_df
+
+def main():
+
+    print("=" * 60)
+    print("UNIVERSAL ENTRY MODEL TRAINING")
+    print("=" * 60)
+    
+    symbol_folders = ["LT", "RELIANCE", "SIEMENS", "TATAELXSI", "TITAN", "TVSMOTOR"]
+    symbol_map = {s: i for i, s in enumerate(symbol_folders)}
+    
+    all_X = []
+    all_labels = []
+    all_symbols = []
+    
+    for symbol in symbol_folders:
+        data_file = Path(f"Dataset/{symbol}_2years_1min.parquet")
+        if not data_file.exists():
+            print(f"Skipping {symbol} - No data file found at {data_file}")
+            continue
+            
+        print(f"\nProcessing {symbol}...")
+        df = load_raw_data(data_file)
+        X_df, labels_df = process_symbol_data(df)
+        X_df['symbol_id'] = symbol_map[symbol]
+        
+        all_X.append(X_df)
+        all_labels.append(labels_df)
+        all_symbols.append(pd.Series([symbol]*len(X_df), index=X_df.index, name='symbol_name'))
+        
+    print("\nConcatenating Universal Dataset...")
+    X_full = pd.concat(all_X).sort_index()
+    labels_full = pd.concat(all_labels).sort_index()
+    symbols_full = pd.concat(all_symbols).sort_index()
+    
+    print(f"Universal Dataset Size: {len(X_full):,} rows")
+    
+    # ========== CORRELATION PRUNING (Fixed: Split-Aware) ==========
+    print("\nPruning highly correlated features based ONLY on First Fold Train Data (>0.95)...")
+    n_splits_sim = 3
+    split_idx_1st = int(len(X_full) / (n_splits_sim + 1))
+    X_safe_train = X_full.iloc[:split_idx_1st].drop(columns=['symbol_id']) # Don't prune symbol_id
+    
+    corr_matrix = X_safe_train.corr().abs()
+    upper_tri = corr_matrix.where(
+        np.triu(np.ones(corr_matrix.shape), k=1).astype(bool)
+    )
+    to_drop = [col for col in upper_tri.columns if any(upper_tri[col] > 0.95)]
+    if to_drop:
+        print(f"  Dropping {len(to_drop)} redundant features: {to_drop[:10]}{'...' if len(to_drop) > 10 else ''}")
+        X_full = X_full.drop(columns=to_drop)
     else:
-        print("  No features dropped (all correlations <= 0.95)")
-    print(f"  Features after pruning: {len(X.columns)}")
+        print("  No features dropped.")
+        
+    X = X_full
+    y_long = labels_full['label_long']
+    y_short = labels_full['label_short']
     
     # ========== TRAINING ==========
-    y_long = labels_df['label_long']
-    y_short = labels_df['label_short']
     
     # NOTE: At inference time, enforce mutual exclusivity:
     #   - Don't allow both LONG & SHORT signals on same bar
@@ -1037,8 +1107,9 @@ def main():
     y_long_val = y_long.iloc[lgb_val_idx]
     y_short_val = y_short.iloc[lgb_val_idx]
     
-    w_long, thresh_long, auc_long = optimize_ensemble(y_long_val, lgb_long_preds, xgb_long_preds, "LONG")
-    w_short, thresh_short, auc_short = optimize_ensemble(y_short_val, lgb_short_preds, xgb_short_preds, "SHORT")
+    sym_val = symbols_full.iloc[lgb_val_idx]
+    w_long, thresh_long, auc_long = optimize_ensemble(y_long_val, lgb_long_preds, xgb_long_preds, "LONG", sym_val)
+    w_short, thresh_short, auc_short = optimize_ensemble(y_short_val, lgb_short_preds, xgb_short_preds, "SHORT", sym_val)
 
     # ========== SAVE MODELS ==========
     model_dir = Path("model_artifacts")
@@ -1060,9 +1131,9 @@ def main():
         "xgb_long": float(xgb_long_thresh),
         "xgb_short": float(xgb_short_thresh),
         "ensemble_long_weight_lgb": float(w_long),
-        "ensemble_long_thresh": float(thresh_long),
+        "ensemble_long_thresh": thresh_long,  # Now a dict
         "ensemble_short_weight_lgb": float(w_short),
-        "ensemble_short_thresh": float(thresh_short)
+        "ensemble_short_thresh": thresh_short  # Now a dict
     }
     
     with open(model_dir / "thresholds.json", "w") as f:
@@ -1095,8 +1166,8 @@ def main():
     print("TRAINING COMPLETE - SUMMARY")
     print(f"{'='*60}")
     print(f"\nEnsemble Performance:")
-    print(f"  LONG  - AUC: {auc_long:.4f}, Weight (LGB): {w_long:.2f}, Threshold: {thresh_long:.3f}")
-    print(f"  SHORT - AUC: {auc_short:.4f}, Weight (LGB): {w_short:.2f}, Threshold: {thresh_short:.3f}")
+    print(f"  LONG  - AUC: {auc_long:.4f}, Weight (LGB): {w_long:.2f}, Threshold: {thresh_long}")
+    print(f"  SHORT - AUC: {auc_short:.4f}, Weight (LGB): {w_short:.2f}, Threshold: {thresh_short}")
     print(f"\nLightGBM Performance:")
     print(f"  LONG  - AUC: {lgb_long_auc:.4f}, Threshold: {lgb_long_thresh:.3f}")
     print(f"  SHORT - AUC: {lgb_short_auc:.4f}, Threshold: {lgb_short_thresh:.3f}")

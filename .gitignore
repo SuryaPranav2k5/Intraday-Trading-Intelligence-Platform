@@ -35,3 +35,16 @@ Thumbs.db
 
 # Gemini
 .gemini/
+
+# API Daily Tokens
+SmartApi/smartapi_daily_token.json
+
+# Local Market Data
+market_data/
+
+# Backtest & Simulation Results
+backtest_results/
+backtest_results_*.csv
+simulation_results/
+qc_results.txt
+

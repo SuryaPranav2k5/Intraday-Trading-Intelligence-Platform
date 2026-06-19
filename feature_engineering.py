@@ -77,6 +77,29 @@ def compute_trend_structure_features(df: pd.DataFrame) -> pd.DataFrame:
     df['dist_from_swing_high'] = (swing_high - df['close']) / df['close']
     df['dist_from_swing_low'] = (df['close'] - swing_low) / df['close']
     
+
+    # --- TRUE INTRADAY FIBONACCI (1-Hour Swing) ---
+    if 'date' not in df.columns:
+        if 'timestamp' in df.columns:
+            df['date'] = df['timestamp'].dt.date
+        else:
+            df['date'] = df.index.date
+            
+    fib_lookback = 60
+    swing_high_60 = df.groupby('date')['high'].transform(lambda x: x.rolling(fib_lookback).max())
+    swing_low_60 = df.groupby('date')['low'].transform(lambda x: x.rolling(fib_lookback).min())
+    swing_range_60 = swing_high_60 - swing_low_60 + 1e-9
+    
+    fib_0_382 = swing_low_60 + swing_range_60 * 0.382
+    fib_0_618 = swing_low_60 + swing_range_60 * 0.618
+    fib_0_786 = swing_low_60 + swing_range_60 * 0.786
+    
+    df['dist_fib_0382_1h'] = (df['close'] - fib_0_382) / (df['close'] + 1e-9)
+    df['dist_fib_0618_1h'] = (df['close'] - fib_0_618) / (df['close'] + 1e-9)
+    df['dist_fib_0786_1h'] = (df['close'] - fib_0_786) / (df['close'] + 1e-9)
+    # END_FIBO_BLOCK
+
+    
     # Trend strength
     df['trend_strength_score'] = (df['EMA_9'] - df['EMA_50']) / df['close']
     df['price_position_in_range'] = (df['close'] - swing_low) / (swing_high - swing_low + 1e-9)
@@ -115,7 +138,10 @@ def compute_momentum_features(df: pd.DataFrame) -> pd.DataFrame:
     df['MACD_hist'] = macd_line - signal_line
     
     # Momentum consistency
-    df['momentum_consistency'] = (df['close'] > df['close'].shift(1)).rolling(5).mean()
+    returns = df['close'].pct_change()
+    df['momentum_consistency'] = returns.rolling(10).apply(
+        lambda x: (np.sign(x) > 0).mean(), raw=True
+    )
     
     return df
 
